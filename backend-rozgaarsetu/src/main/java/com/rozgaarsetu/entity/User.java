@@ -2,13 +2,14 @@ package com.rozgaarsetu.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 /**
  * User Entity — Represents all users on the RozgaarSetu platform.
  * A single table stores clients, contractors, workers, and admins.
  * The 'role' field differentiates them.
  *
- * Workers additionally have: category, hourlyRate, latitude, longitude,
+ * Workers additionally have: category, dailyWage, latitude, longitude,
  * averageRating.
  */
 @Entity
@@ -47,8 +48,8 @@ public class User {
      */
     private String category;
 
-    /** Worker's hourly rate in INR */
-    private Double hourlyRate;
+    /* Worker's minimum daily wage in INR */
+    private Double dailyWage;
 
     /** GPS latitude for location-based search */
     private Double latitude;
@@ -68,4 +69,32 @@ public class User {
 
     /** Profile photo URL */
     private String profilePhotoUrl;
+
+    /** Optional email — can be used instead of phone for login */
+    @Column(unique = true)
+    private String email;
+
+    /** Whether the worker has a Premium subscription */
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isPremium = false;
+
+    /** Aadhaar card number (12-digit string) for identity verification */
+    private String aadharNumber;
+
+    /**
+     * Account moderation status.
+     * Values: "ACTIVE", "SUSPENDED_24H", "SUSPENDED_7D", "TERMINATED"
+     */
+    @Column(nullable = false)
+    @Builder.Default
+    private String accountStatus = "ACTIVE";
+
+    /** Total earnings accumulated by the worker (INR) */
+    @Column(nullable = false)
+    @Builder.Default
+    private Double totalEarnings = 0.0;
+
+    /** If suspended, the datetime until which the suspension lasts */
+    private LocalDateTime suspendedUntil;
 }

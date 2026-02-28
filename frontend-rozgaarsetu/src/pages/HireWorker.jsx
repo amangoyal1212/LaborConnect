@@ -40,7 +40,7 @@ const WorkerCard = ({ worker, onHire }) => {
                 <div className="d-flex flex-wrap gap-3 text-secondary small mb-3">
                     <div className="d-flex align-items-center">
                         <IndianRupee size={16} className="me-1" />
-                        <span className="fw-semibold text-orange fs-5">{worker.hourlyRate}/hr</span>
+                        <span className="fw-semibold text-orange fs-5">{worker.dailyWage}/day</span>
                     </div>
                     {worker.latitude && worker.longitude && (
                         <div className="d-flex align-items-center">
@@ -59,12 +59,10 @@ const WorkerCard = ({ worker, onHire }) => {
         </div>
     );
 };
-
 const HireWorker = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [workers, setWorkers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [durationToggle, setDurationToggle] = useState('hourly');
     const { t } = useContext(LanguageContext);
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -100,7 +98,7 @@ const HireWorker = () => {
         }
 
         try {
-            const amount = durationToggle === 'hourly' ? worker.hourlyRate * 4 : worker.hourlyRate * 8;
+            const amount = worker.dailyWage || 0;
             const payload = {
                 workerId: worker.id,
                 location: 'Customer Provided Location',
@@ -132,13 +130,7 @@ const HireWorker = () => {
                         <p className="text-secondary mb-0">Filter by hiring mode and book trusted workers quickly.</p>
                     </div>
                     <div className="col-md-6 d-flex flex-column flex-md-row justify-content-md-end gap-3 align-items-md-center">
-                        <div className="btn-group glass-card p-1 rounded-3" role="group" aria-label="Hiring duration">
-                            <input type="radio" className="btn-check" name="duration" id="hourly" autoComplete="off" checked={durationToggle === 'hourly'} onChange={() => setDurationToggle('hourly')} />
-                            <label className={`btn ${durationToggle === 'hourly' ? 'btn-primary text-white' : 'btn-outline-secondary border-0'}`} htmlFor="hourly">Hourly</label>
 
-                            <input type="radio" className="btn-check" name="duration" id="daily" autoComplete="off" checked={durationToggle === 'daily'} onChange={() => setDurationToggle('daily')} />
-                            <label className={`btn ${durationToggle === 'daily' ? 'btn-primary text-white' : 'btn-outline-secondary border-0'}`} htmlFor="daily">Full Day</label>
-                        </div>
 
                         <select
                             className="form-select glass-card border-0 py-2"

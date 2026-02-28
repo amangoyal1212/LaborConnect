@@ -16,12 +16,17 @@ public class UserDto {
     private Long id;
     private String name;
     private String phone;
+    private String email;
     private String role;
     private String category;
-    private Double hourlyRate;
+    private Double dailyWage;
     private Double latitude;
     private Double longitude;
     private Boolean isVerified;
     private Double averageRating;
     private String profilePhotoUrl;
+    private Boolean isPremium;
+    private String aadharNumber;
+    private String accountStatus;
+    private Double totalEarnings;
 }

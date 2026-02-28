@@ -3,12 +3,11 @@ package com.rozgaarsetu.service;
 import com.rozgaarsetu.dto.BookingRequest;
 import com.rozgaarsetu.dto.BookingResponse;
 import com.rozgaarsetu.dto.UserDto;
-import com.rozgaarsetu.entity.Booking;
-import com.rozgaarsetu.entity.BookingStatus;
-import com.rozgaarsetu.entity.User;
+import com.rozgaarsetu.entity.*;
 import com.rozgaarsetu.exception.BadRequestException;
 import com.rozgaarsetu.exception.ResourceNotFoundException;
 import com.rozgaarsetu.repository.BookingRepository;
+import com.rozgaarsetu.repository.ReviewRepository;
 import com.rozgaarsetu.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,7 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
 
     @Transactional
     public BookingResponse createBooking(Long clientId, BookingRequest request) {
@@ -91,8 +91,13 @@ public class BookingService {
         return mapToResponse(bookingRepository.save(booking));
     }
 
+    /**
+     * Confirms payment AND saves the review in a single transaction.
+     * The rating and comment are now submitted along with the payment confirmation
+     * so the client cannot skip the feedback step.
+     */
     @Transactional
-    public BookingResponse confirmPayment(Long clientId, Long bookingId) {
+    public BookingResponse confirmPayment(Long clientId, Long bookingId, Integer rating, String comment) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking", "id", bookingId));
 
@@ -106,7 +111,26 @@ public class BookingService {
 
         booking.setIsPaid(true);
         booking.setStatus(BookingStatus.COMPLETED);
-        return mapToResponse(bookingRepository.save(booking));
+        bookingRepository.save(booking);
+
+        // Save mandatory review
+        if (rating != null && rating >= 1 && rating <= 5) {
+            if (!reviewRepository.existsByBookingId(bookingId)) {
+                Review review = Review.builder()
+                        .booking(booking)
+                        .rating(rating)
+                        .comment(comment != null ? comment : "")
+                        .build();
+                reviewRepository.save(review);
+            }
+            // Update worker's average rating and total earnings
+            updateWorkerStats(booking.getWorker().getId(), booking.getAmount());
+        } else {
+            // Still update earnings even if no valid rating provided
+            updateWorkerEarnings(booking.getWorker().getId(), booking.getAmount());
+        }
+
+        return mapToResponse(booking);
     }
 
     @Transactional(readOnly = true)
@@ -119,6 +143,26 @@ public class BookingService {
     public List<BookingResponse> getWorkerBookings(Long workerId) {
         return bookingRepository.findByWorkerIdOrderByBookingDateDesc(workerId)
                 .stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    private void updateWorkerStats(Long workerId, Double earnedAmount) {
+        User worker = getUserById(workerId);
+        // Accumulate earnings
+        double current = (worker.getTotalEarnings() != null) ? worker.getTotalEarnings() : 0.0;
+        worker.setTotalEarnings(current + (earnedAmount != null ? earnedAmount : 0.0));
+        // Recalculate average rating
+        Double newAvg = reviewRepository.getAverageRatingForWorker(workerId);
+        if (newAvg != null) {
+            worker.setAverageRating(Math.round(newAvg * 10.0) / 10.0);
+        }
+        userRepository.save(worker);
+    }
+
+    private void updateWorkerEarnings(Long workerId, Double earnedAmount) {
+        User worker = getUserById(workerId);
+        double current = (worker.getTotalEarnings() != null) ? worker.getTotalEarnings() : 0.0;
+        worker.setTotalEarnings(current + (earnedAmount != null ? earnedAmount : 0.0));
+        userRepository.save(worker);
     }
 
     private User getUserById(Long id) {
@@ -157,9 +201,13 @@ public class BookingService {
                 .id(user.getId())
                 .name(user.getName())
                 .phone(user.getPhone())
+                .email(user.getEmail())
                 .role(user.getRole().name().replace("ROLE_", ""))
                 .category(user.getCategory())
                 .averageRating(user.getAverageRating())
+                .isPremium(user.getIsPremium())
+                .accountStatus(user.getAccountStatus())
+                .totalEarnings(user.getTotalEarnings())
                 .build();
     }
 }

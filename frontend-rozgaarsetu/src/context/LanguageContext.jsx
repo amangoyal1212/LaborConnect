@@ -4,11 +4,11 @@ import { translations } from '../utils/translations';
 export const LanguageContext = createContext(null);
 
 export const LanguageProvider = ({ children }) => {
-    const [language, setLanguage] = useState('en'); // 'en' or 'hi'
+    const [language, setLanguage] = useState('en');
 
     useEffect(() => {
         const storedLang = localStorage.getItem('language');
-        if (storedLang) {
+        if (storedLang === 'hi' || storedLang === 'en') {
             setLanguage(storedLang);
         }
     }, []);
@@ -19,8 +19,15 @@ export const LanguageProvider = ({ children }) => {
         localStorage.setItem('language', newLang);
     };
 
+    /**
+     * Translate a key.
+     * Falls back to English if the key is missing in the current language,
+     * and finally falls back to the key itself — so no null/undefined crashes.
+     */
     const t = (key) => {
-        return translations[language][key] || key;
+        return translations?.[language]?.[key]
+            ?? translations?.['en']?.[key]
+            ?? key;
     };
 
     return (

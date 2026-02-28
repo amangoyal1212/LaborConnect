@@ -3,13 +3,14 @@ package com.rozgaarsetu.controller;
 import com.rozgaarsetu.dto.BookingRequest;
 import com.rozgaarsetu.dto.BookingResponse;
 import com.rozgaarsetu.service.BookingService;
-import jakarta.validation.Valid;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -35,12 +36,19 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getClientBookings(clientId));
     }
 
+    /**
+     * Confirm payment AND submit mandatory review in one API call.
+     * The client cannot confirm payment without providing a star rating.
+     */
     @PutMapping("/client/{clientId}/{bookingId}/confirm-payment")
     @PreAuthorize("hasAnyRole('CLIENT', 'CONTRACTOR')")
     public ResponseEntity<BookingResponse> confirmPayment(
             @PathVariable Long clientId,
-            @PathVariable Long bookingId) {
-        return ResponseEntity.ok(bookingService.confirmPayment(clientId, bookingId));
+            @PathVariable Long bookingId,
+            @RequestBody(required = false) ConfirmPaymentRequest body) {
+        Integer rating = (body != null) ? body.getRating() : null;
+        String comment = (body != null) ? body.getComment() : null;
+        return ResponseEntity.ok(bookingService.confirmPayment(clientId, bookingId, rating, comment));
     }
 
     // ----- Endpoints for Workers -----
@@ -75,5 +83,12 @@ public class BookingController {
             @PathVariable Long bookingId,
             @RequestParam String afterPhotoUrl) {
         return ResponseEntity.ok(bookingService.completeWork(workerId, bookingId, afterPhotoUrl));
+    }
+
+    /** Inner DTO for the confirm-payment request body */
+    @Data
+    public static class ConfirmPaymentRequest {
+        private Integer rating;
+        private String comment;
     }
 }

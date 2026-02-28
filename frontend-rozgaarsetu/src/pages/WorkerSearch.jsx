@@ -41,7 +41,7 @@ const WorkerCard = ({ worker, onHire }) => {
                 <div className="d-flex flex-wrap gap-3 text-secondary small mb-3">
                     <div className="d-flex align-items-center">
                         <IndianRupee size={16} className="me-1" />
-                        <span className="fw-semibold">{worker.hourlyRate}</span> {t('rate_hr')}
+                        <span className="fw-semibold">{worker.dailyWage}</span> /day
                     </div>
                     {worker.latitude && worker.longitude && (
                         <div className="d-flex align-items-center">
@@ -105,7 +105,7 @@ const WorkerSearch = () => {
             const payload = {
                 workerId: worker.id,
                 location: 'Customer Provided Location', // Normally asked via modal
-                amount: worker.hourlyRate * 8 // Assume 8 hour default pay
+                amount: worker.dailyWage || 0
             };
             await api.post(`/bookings/client/${user.id}`, payload);
             toast.success(`Booking request sent to ${worker.name}!`);

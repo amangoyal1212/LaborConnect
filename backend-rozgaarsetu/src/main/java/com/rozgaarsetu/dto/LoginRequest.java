@@ -1,10 +1,11 @@
 package com.rozgaarsetu.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 /**
- * DTO for login requests — user authenticates with phone + password.
+ * DTO for login requests.
+ * Supports login with phone OR email alongside password.
+ * At least one of phone/email must be non-blank.
  */
 @Getter
 @Setter
@@ -12,9 +13,12 @@ import lombok.*;
 @AllArgsConstructor
 public class LoginRequest {
 
-    @NotBlank(message = "Phone number is required")
+    /** Phone number (optional if email is provided) */
     private String phone;
 
-    @NotBlank(message = "Password is required")
+    /** Email address (optional if phone is provided) */
+    private String email;
+
+    @lombok.NonNull
     private String password;
 }

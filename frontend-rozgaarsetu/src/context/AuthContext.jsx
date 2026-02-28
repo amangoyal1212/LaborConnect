@@ -19,9 +19,20 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const login = async (phone, password) => {
+    /**
+     * Login with either phone OR email + password.
+     * Detects whether the identifier is an email (contains '@') and sends
+     * the appropriate field in the request body.
+     */
+    const login = async (identifier, password) => {
         try {
-            const response = await api.post('/auth/login', { phone, password });
+            const payload = { password };
+            if (identifier.includes('@')) {
+                payload.email = identifier.trim().toLowerCase();
+            } else {
+                payload.phone = identifier.trim();
+            }
+            const response = await api.post('/auth/login', payload);
             const { token, ...userData } = response.data;
 
             localStorage.setItem('token', token);
@@ -46,7 +57,7 @@ export const AuthProvider = ({ children }) => {
             toast.success('Registration Successful!');
             return true;
         } catch (error) {
-            console.error("Registration Error Details:", error.response || error);
+            console.error('Registration Error Details:', error.response || error);
             toast.error(error.response?.data?.message || 'Registration failed');
             return false;
         }

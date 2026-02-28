@@ -1,7 +1,12 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Star, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star } from 'lucide-react';
 
-const ReviewModal = ({ show, onClose, workerName, onSubmit }) => {
+/**
+ * Non-dismissible ReviewModal with Framer Motion animations.
+ * The user MUST submit a star rating before this modal closes.
+ */
+const ReviewModal = ({ show, workerName, onSubmit }) => {
     const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(0);
     const [review, setReview] = useState('');
@@ -18,61 +23,82 @@ const ReviewModal = ({ show, onClose, workerName, onSubmit }) => {
 
     const isDisabled = useMemo(() => rating === 0 || submitting, [rating, submitting]);
 
-    if (!show) {
-        return null;
-    }
-
     const handleSubmit = async () => {
-        if (rating === 0) {
-            return;
-        }
+        if (rating === 0) return;
         setSubmitting(true);
         await onSubmit({ rating, review: review.trim() });
         setSubmitting(false);
     };
 
     return (
-        <div className="review-modal-backdrop" onClick={onClose}>
-            <div className="review-modal-content slide-up" onClick={(event) => event.stopPropagation()}>
-                <button className="review-modal-close" onClick={onClose} aria-label="Close">
-                    <X size={20} />
-                </button>
-                <h4 className="fw-bold mb-2">Verify Work and Release Escrow</h4>
-                <p className="text-secondary mb-3">
-                    Add a 5-star review for <strong>{workerName}</strong>.
-                </p>
-                <div className="d-flex justify-content-center gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map((value) => (
-                        <button
-                            key={value}
-                            type="button"
-                            className="review-star-btn"
-                            onMouseEnter={() => setHover(value)}
-                            onMouseLeave={() => setHover(0)}
-                            onClick={() => setRating(value)}
-                            aria-label={`${value} stars`}
+        <AnimatePresence>
+            {show && (
+                <motion.div
+                    className="review-modal-backdrop"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <motion.div
+                        className="review-modal-content"
+                        initial={{ opacity: 0, scale: 0.85, y: 30 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.85, y: 30 }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    >
+                        <h4 className="fw-bold mb-1" style={{ color: 'var(--text-heading)' }}>⭐ Rate the Work</h4>
+                        <p className="mb-3" style={{ fontSize: '0.9rem', color: 'var(--text-body)' }}>
+                            Please rate <strong>{workerName}</strong> to release the escrow payment.
+                            <br />
+                            <span className="small fw-semibold" style={{ color: 'var(--gold)' }}>A rating is required — this cannot be skipped.</span>
+                        </p>
+                        <div className="d-flex justify-content-center gap-1 mb-3">
+                            {[1, 2, 3, 4, 5].map((value) => (
+                                <motion.button
+                                    key={value}
+                                    type="button"
+                                    className="review-star-btn"
+                                    onMouseEnter={() => setHover(value)}
+                                    onMouseLeave={() => setHover(0)}
+                                    onClick={() => setRating(value)}
+                                    aria-label={`${value} stars`}
+                                    whileHover={{ scale: 1.2 }}
+                                    whileTap={{ scale: 0.9 }}
+                                >
+                                    <Star
+                                        size={34}
+                                        fill={(hover || rating) >= value ? '#10b981' : 'none'}
+                                        stroke={(hover || rating) >= value ? '#10b981' : '#cbd5e1'}
+                                    />
+                                </motion.button>
+                            ))}
+                        </div>
+                        <textarea
+                            className="form-control mb-3"
+                            rows="3"
+                            placeholder="Optional: Leave a comment about this worker..."
+                            value={review}
+                            onChange={(event) => setReview(event.target.value)}
+                            maxLength={300}
+                        />
+                        <motion.button
+                            className="btn btn-primary w-100"
+                            onClick={handleSubmit}
+                            disabled={isDisabled}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            style={!isDisabled ? { background: 'linear-gradient(135deg, var(--emerald), var(--emerald-hover))', border: 'none' } : {}}
                         >
-                            <Star
-                                size={34}
-                                fill={(hover || rating) >= value ? '#ea580c' : 'none'}
-                                stroke={(hover || rating) >= value ? '#ea580c' : '#cbd5e1'}
-                            />
-                        </button>
-                    ))}
-                </div>
-                <textarea
-                    className="form-control mb-3"
-                    rows="3"
-                    placeholder="Optional feedback"
-                    value={review}
-                    onChange={(event) => setReview(event.target.value)}
-                    maxLength={300}
-                />
-                <button className="btn btn-primary w-100" onClick={handleSubmit} disabled={isDisabled}>
-                    {submitting ? 'Submitting...' : 'Submit Review'}
-                </button>
-            </div>
-        </div>
+                            {submitting ? 'Confirming Payment…' : `Submit Review & Release ₹ Escrow`}
+                        </motion.button>
+                        {rating === 0 && (
+                            <p className="text-center small mt-2" style={{ color: 'var(--text-muted)' }}>👆 Please select a star rating to continue</p>
+                        )}
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 };
 

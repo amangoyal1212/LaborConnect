@@ -23,6 +23,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /** Check if a phone number is already registered */
     boolean existsByPhone(String phone);
 
+    /** Find user by email address (for email-based login) */
+    Optional<User> findByEmail(String email);
+
+    /** Check if an email is already registered */
+    boolean existsByEmail(String email);
+
     /** Find all users with a given role */
     List<User> findByRole(Role role);
 

@@ -22,6 +22,9 @@ public class RegisterRequest {
     @Size(min = 10, max = 15, message = "Phone must be 10-15 digits")
     private String phone;
 
+    /** Optional email for email-based login */
+    private String email;
+
     @NotBlank(message = "Password is required")
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
@@ -33,9 +36,18 @@ public class RegisterRequest {
     private String category;
 
     /** Only relevant for WORKER role */
-    private Double hourlyRate;
+    private Double dailyWage;
 
     /** GPS coordinates for location-based features */
     private Double latitude;
     private Double longitude;
+
+    /** Aadhaar card number (optional) */
+    private String aadharNumber;
+
+    /** Organization name for CONTRACTOR role */
+    private String organizationName;
+
+    /** GST number for CONTRACTOR role */
+    private String gstNumber;
 }

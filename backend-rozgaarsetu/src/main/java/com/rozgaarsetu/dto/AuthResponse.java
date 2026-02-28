@@ -4,7 +4,7 @@ import lombok.*;
 
 /**
  * DTO returned after successful authentication (login or register).
- * Contains the JWT token and basic user information.
+ * Contains the JWT token and comprehensive user information.
  */
 @Getter
 @Setter
@@ -19,9 +19,13 @@ public class AuthResponse {
     private Long id;
     private String name;
     private String phone;
+    private String email;
     private String role;
     private String category;
-    private Double hourlyRate;
+    private Double dailyWage;
     private Boolean isVerified;
     private Double averageRating;
+    private Boolean isPremium;
+    private String accountStatus;
+    private Double totalEarnings;
 }

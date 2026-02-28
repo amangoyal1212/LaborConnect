@@ -42,12 +42,15 @@ public class WorkerService {
                 .phone(user.getPhone())
                 .role(user.getRole().name().replace("ROLE_", ""))
                 .category(user.getCategory())
-                .hourlyRate(user.getHourlyRate())
+                .dailyWage(user.getDailyWage())
                 .latitude(user.getLatitude())
                 .longitude(user.getLongitude())
                 .isVerified(user.getIsVerified())
                 .averageRating(user.getAverageRating())
                 .profilePhotoUrl(user.getProfilePhotoUrl())
+                .isPremium(user.getIsPremium())
+                .accountStatus(user.getAccountStatus())
+                .totalEarnings(user.getTotalEarnings())
                 .build();
     }
 }
